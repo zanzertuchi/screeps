@@ -8,7 +8,7 @@ var typeWorker = {
 		//later these values should be deterimed by Room/Energy/building levels and shit - but I have no idea what that is yet :P 
 		var ideal_workers = 10;
         //if we have less than total, lets spawn what we need TODO: need to setup dynamic boddies for works and check if CanSpawn)
-        if (num_workers.length < ideal_workers  && creep.room.energyAvailable > 600){
+        if (num_workers.length < ideal_workers  && creep.room.energyAvailable > 299){
             //this also means that we need to clean up memory.
              for(var name in Memory.creeps) {
                 if(!Game.creeps[name]) {
@@ -18,7 +18,7 @@ var typeWorker = {
             //TODO: Use helper class and spawn based on sources.
             var useThisSource = helper.sourceWorkNum(creep);
             var useSpawn = creep.room.spawns;
-            var newName = Game.spawns.Pcake1.createCreep([WORK,WORK,WORK,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE], 
+            var newName = Game.spawns.Pca.createCreep([WORK,CARRY,CARRY,MOVE,MOVE], 
                 undefined, {currentJob: "harvester", type: 'worker', useSource: useThisSource, working: false});
             }    
     },
@@ -109,8 +109,14 @@ var typeWorker = {
                             creep.moveTo(target);
                         }
                     }
-                    else if(creep.harvest(Game.getObjectById(creep.memory.useSource)) == ERR_NOT_IN_RANGE) {
+                    else if(creep.memory.useSourc && Game.getObjectById(creep.memory.useThisSource).isActive) {
+                        if(creep.harvest(Game.getObjectById(creep.memory.useThisSource)) == ERR_NOT_IN_RANGE)
                         creep.moveTo(Game.getObjectById(creep.memory.useSource));
+                    }
+                    else{
+                     var useThis = creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)  
+                        if(creep.harvest(useThis) == ERR_NOT_IN_RANGE)
+                        creep.moveTo(useThis);
                     }
                 }
             }
@@ -119,10 +125,10 @@ var typeWorker = {
     assignJob: function(creep){
         
         var workerStatus = helper.getWorkStatus(creep);
-        if(workerStatus.needHarv){
-           //we need you harvester Humant! You're our only hope! 
+        if(workerStatus.needUpgrs && workerStatus.workers > 1)
+            creep.memory.currentJob = "upgrader";    
+        else if(workerStatus.needHarv)
             creep.memory.currentJob = "harvester";
-        }
         else if(workerStatus.needBuild){
             //Whatcha wanna build?
             creep.memory.currentJob = "builder";

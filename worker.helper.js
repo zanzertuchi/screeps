@@ -47,16 +47,9 @@ var workerHelper = {
          for(var i=0; i < available.length; i++){
             var source = _.filter(Game.creeps, (creep) => creep.memory.useThisSource == available[i]);
             if(source.length < gAvailable[i]){
-             var useThisSource = available[i];
+             return useThisSource = available[i];
             }
          }
-         if(!useThisSource){
-            var r_num = Math.floor(Math.random() * available.length);
-            var useThisSource = available[r_num];
-
-            
-         }
-
         return useThisSource;
     },
     getWorkStatus: function(creep) {
@@ -65,9 +58,11 @@ var workerHelper = {
 
             var sites = creep.room.find(FIND_CONSTRUCTION_SITES);
             var m_needBuild = sites.length > workerStats.builds && workerStats.builds <= workerStats.workers / 2;
+            var m_needUps = workerStats.upgrs < 1;
             return {
                 needHarv: m_needHarv,
-                needBuild: m_needBuild
+                needBuild: m_needBuild,
+                needUpgrs: m_needUps
             };
         },
     getWorkerStatus: function(creep){
