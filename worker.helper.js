@@ -1,8 +1,9 @@
 /*
 TODO -- looks like we could extend some prototypes? investigate! 
 */
- 
- 
+
+
+
 var workerHelper = {
     //Would be nice to add a 'busy' function to find out how busy the source was and maybe use another.
     
@@ -43,26 +44,34 @@ var workerHelper = {
              available.push(sources[i].id);
              gAvailable.push(getAvailable);
          }
-
+         
+         var currentUsers = 0;
          for(var i=0; i < available.length; i++){
-            var source = _.filter(Game.creeps, (creep) => creep.memory.useThisSource == available[i]);
-            if(source.length < gAvailable[i]){
-             return useThisSource = available[i];
+            var w_source = _.filter(Game.creeps, (creep) => creep.memory.useSource == available[i]);
+            if(!w_source.length)
+            var useThisSource = available[i]
+            else if(w_source <= currentUsers){
+                var useThisSource = available[i];
+                return;
             }
+            else
+            currentUsers = w_source.length;
          }
         return useThisSource;
     },
     getWorkStatus: function(creep) {
             var workerStats = workerHelper.getWorkerStatus(creep);
-            var m_needHarv = workerStats.harvs <=4 && creep.room.energyAvailable < creep.room.energyCapacityAvailable;
+            var m_needHarv = workerStats.harvs < 4 && creep.room.energyAvailable < creep.room.energyCapacityAvailable;
 
             var sites = creep.room.find(FIND_CONSTRUCTION_SITES);
-            var m_needBuild = sites.length > workerStats.builds && workerStats.builds <= workerStats.workers / 2;
+            var m_needBuild = sites.length > workerStats.builds && workerStats.builds < workerStats.workers / 2;
+
             var m_needUps = workerStats.upgrs < 1;
             return {
                 needHarv: m_needHarv,
                 needBuild: m_needBuild,
-                needUpgrs: m_needUps
+                needUpgrs: m_needUps,
+                workers: workerStats.workers
             };
         },
     getWorkerStatus: function(creep){
@@ -70,7 +79,7 @@ var workerHelper = {
             var num_build = _.filter(Game.creeps, (creep) => creep.memory.currentJob == 'builder');
             var num_upgrs = _.filter(Game.creeps, (creep) => creep.memory.currentJob == 'upgrader');
             var num_workers = _.filter(Game.creeps, (creep) => creep.memory.type == 'worker');
-
+            
             return{
                 harvs: num_harvs.length,
                 builds: num_build.length,

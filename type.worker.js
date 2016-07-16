@@ -6,7 +6,7 @@ var typeWorker = {
 
 		var num_workers = _.filter(Game.creeps, (creep) => creep.memory.type == 'worker');
 		//later these values should be deterimed by Room/Energy/building levels and shit - but I have no idea what that is yet :P 
-		var ideal_workers = 10;
+		var ideal_workers = 14;
         //if we have less than total, lets spawn what we need TODO: need to setup dynamic boddies for works and check if CanSpawn)
         if (num_workers.length < ideal_workers  && creep.room.energyAvailable > 299){
             //this also means that we need to clean up memory.
@@ -18,7 +18,20 @@ var typeWorker = {
             //TODO: Use helper class and spawn based on sources.
             var useThisSource = helper.sourceWorkNum(creep);
             var useSpawn = creep.room.spawns;
-            var newName = Game.spawns.Pca.createCreep([WORK,CARRY,CARRY,MOVE,MOVE], 
+            var body = [WORK,CARRY,CARRY,MOVE,MOVE];
+            if(creep.room.energyCapacityAvailable >= 400){
+                var phase =100;
+                var currentPhase = (creep.room.energyCapacity - 300) / phase;
+                var isOdd = function(x) { return x & 1; };
+                for(var i = 0; i< currentPhase; i++)
+                {
+                    if(!isOdd(i))
+                    body.push(CARRY,MOVE)
+                    else
+                    body.push(WORK)
+                }
+            }
+            var newName = Game.spawns.Pca.createCreep(body, 
                 undefined, {currentJob: "harvester", type: 'worker', useSource: useThisSource, working: false});
             }    
     },
@@ -55,7 +68,14 @@ var typeWorker = {
                     }
                 }    
                 else if(creep.memory.currentJob == "builder"){
-                    var target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+                            
+                    var target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
+                             filter: (structure) => {
+                            return (structure.structureType == STRUCTURE_EXTENSION)
+                            }
+                         });
+                     if(!target)   
+                        var target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
                     if(target){
                         if(creep.build(target) == ERR_NOT_IN_RANGE) {
                             creep.moveTo(target);
@@ -103,26 +123,36 @@ var typeWorker = {
                   }
                 else{
                       //harvester go straight to sources! :3
-                    var target = creep.pos.findClosestByRange(FIND_DROPPED_ENERGY);
-                    if(target) {
-                        if(creep.pickup(target) == ERR_NOT_IN_RANGE) {
-                            creep.moveTo(target);
+                    var droppedR = creep.pos.findClosestByRange(FIND_DROPPED_ENERGY);
+                    if(droppedR) {
+                        if(creep.pickup(droppedR) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(droppedR);
                         }
                     }
-                    else if(creep.memory.useSourc && Game.getObjectById(creep.memory.useThisSource).isActive) {
-                        if(creep.harvest(Game.getObjectById(creep.memory.useThisSource)) == ERR_NOT_IN_RANGE)
-                        creep.moveTo(Game.getObjectById(creep.memory.useSource));
+                    else{ 
+                        var u_source = Game.getObjectById(creep.memory.useSource);
+                        if(u_source){
+                            if(creep.harvest(u_source) == ERR_NOT_IN_RANGE )
+                            creep.moveTo(Game.getObjectById(creep.memory.useSource));}
+                        else
+                        var sourc = creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
+                            if(creep.harvest(sourc) == ERR_NOT_IN_RANGE)
+                            creep.moveTo(sourc);
+                            
+                        
                     }
-                    else{
-                     var useThis = creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)  
-                        if(creep.harvest(useThis) == ERR_NOT_IN_RANGE)
-                        creep.moveTo(useThis);
-                    }
+
                 }
             }
         }
     },
     assignJob: function(creep){
+                    
+            ///test..
+
+
+            //TEST // 
+        
         
         var workerStatus = helper.getWorkStatus(creep);
         if(workerStatus.needUpgrs && workerStatus.workers > 1)
